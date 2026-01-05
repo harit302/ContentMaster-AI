@@ -3,6 +3,13 @@ import os
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from dotenv import load_dotenv
 
+# Импортируем все команды
+from handlers.commands import (
+    start_command, help_command, profile_command, premium_command,
+    ref_command, text_command, image_command, rewrite_command,
+    ideas_command, stats_command
+)
+
 # Загружаем переменные окружения
 load_dotenv()
 
@@ -20,77 +27,40 @@ if not BOT_TOKEN:
     logger.error("❌ BOT_TOKEN не найден! Добавьте его в файл .env")
     exit(1)
 
-async def start(update, context):
-    """Обработчик команды /start"""
-    user = update.effective_user
-    welcome_text = f"""
-🤖 Привет, {user.first_name}! Я ContentMaster AI — твой личный генератор контента!
-
-✨ Что я умею:
-• 📝 Писать статьи, посты, сценарии
-• 🖼️ Создавать уникальные изображения
-• 💡 Генерировать идеи для бизнеса
-• ✏️ Улучшать и переписывать тексты
-
-🎁 Бесплатно: 3 запроса в день
-⭐ Премиум: безлимит + GPT-4 + DALL-E 3
-
-Просто напиши тему — я сделаю всё остальное!
-"""
-    await update.message.reply_text(welcome_text)
-
-async def help_command(update, context):
-    """Обработчик команды /help"""
-    help_text = """
-📚 Как использовать бота:
-
-1. Напишите тему для текста
-   Пример: "Напиши статью про искусственный интеллект"
-
-2. Опишите изображение
-   Пример: "Космонавт с котиком на Марсе"
-
-3. Попросите идеи для контента
-   Пример: "Идеи для IT-блога"
-
-Команды:
-/start - начать работу
-/help - помощь
-"""
-    await update.message.reply_text(help_text)
-
-async def handle_message(update, context):
-    """Обработчик текстовых сообщений"""
-    user_message = update.message.text
-    
-    # Проверяем тип запроса
-    if "статья" in user_message.lower() or "пост" in user_message.lower():
-        response = f"📝 *Генерация текста*\n\nЗапрос: \"{user_message}\"\n\nТекст будет сгенерирован скоро!"
-    elif "картинк" in user_message.lower() or "изображен" in user_message.lower():
-        response = f"🖼️ *Генерация изображения*\n\nЗапрос: \"{user_message}\"\n\nИзображение будет создано скоро!"
-    elif "иде" in user_message.lower():
-        response = f"💡 *Генерация идей*\n\nТема: \"{user_message}\"\n\nИдеи будут предложены скоро!"
-    else:
-        response = f"🤖 *ContentMaster AI*\n\nВаш запрос: \"{user_message}\"\n\nЯ могу:\n• Написать текст\n• Создать картинку\n• Придумать идеи"
-    
-    await update.message.reply_text(response, parse_mode='Markdown')
-
 def main():
-    """Запуск бота"""
+    """Запуск бота со всеми командами"""
     logger.info("🚀 Запуск ContentMaster AI бота...")
     
     # Создаем приложение
     application = Application.builder().token(BOT_TOKEN).build()
     
-    # Регистрируем обработчики команд
-    application.add_handler(CommandHandler("start", start))
+    # Регистрируем все команды
+    application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("help", help_command))
+    application.add_handler(CommandHandler("profile", profile_command))
+    application.add_handler(CommandHandler("premium", premium_command))
+    application.add_handler(CommandHandler("ref", ref_command))
+    application.add_handler(CommandHandler("text", text_command))
+    application.add_handler(CommandHandler("image", image_command))
+    application.add_handler(CommandHandler("rewrite", rewrite_command))
+    application.add_handler(CommandHandler("ideas", ideas_command))
+    application.add_handler(CommandHandler("stats", stats_command))
     
-    # Регистрируем обработчик текстовых сообщений
+    # Обработчик обычных сообщений
+    async def handle_message(update, context):
+        await update.message.reply_text(
+            "🤖 Используйте команды:\n"
+            "/start - главное меню\n"
+            "/help - помощь\n"
+            "/text - генерация текста\n"
+            "/image - создание изображения"
+        )
+    
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     
     # Запускаем бота
-    logger.info("🤖 Бот запущен и готов к работе!")
+    logger.info("✅ Бот запущен со всеми командами!")
+    logger.info("📋 Доступные команды: /start, /help, /profile, /premium, /ref, /text, /image, /rewrite, /ideas, /stats")
     application.run_polling()
 
 if __name__ == '__main__':
